@@ -244,7 +244,7 @@ select {
 .underline-indicators > * {
     padding: var(--underline-gap, 1em) 0;
     border-bottom: .2rem solid hsl( var(--clr-white) / 0 );
-    /* transition: all 500ms ease; */
+    transition: all 500ms ease;
     background-color: transparent;
 }
 
@@ -253,11 +253,9 @@ select {
     border-color: hsl( var(--clr-white) / .5);
 }
 
-.underline-indicators > *.active {
+.underline-indicators > .active {
     border-color: hsl( var(--clr-white) / 1);
 }
-
-
 
 
 
