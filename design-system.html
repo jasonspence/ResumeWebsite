@@ -119,14 +119,27 @@
             </a>
           </div>
 
-          <div>
+          <div class="flow" style="--flow-space: 4rem;">
             <!-- Tabs -->
-
+            <div class="tabs-navigation underline-indicators flex">
+              <button aria-selected="true"  class="uppercase ff-sans-cond text-light bg-dark letter-spacing-2">Moon</button>
+              <button aria-selected="false" class="uppercase ff-sans-cond text-light bg-dark letter-spacing-2">Mars</button>
+              <button aria-selected="false" class="uppercase ff-sans-cond text-light bg-dark letter-spacing-2">Europa</button>
+            </div>
 
             <!-- Dots -->
-
+            <div class="dots-navigation flex">
+              <button aria-selected="true" ><span class="sr-only">Jupiter</span></button>
+              <button aria-selected="false"><span class="sr-only">Saturn</span></button>
+              <button aria-selected="false"><span class="sr-only">Uranus</span></button>
+            </div>
 
             <!-- Numbers -->
+            <div class="numbers-navigation flow">
+              <button aria-selected="true"  class="uppercase ff-serif fs-600 text-white bg-dark letter-spacing-2">1</button>
+              <button aria-selected="false" class="uppercase ff-serif fs-600 text-white bg-dark letter-spacing-2">2</button>
+              <button aria-selected="false" class="uppercase ff-serif fs-600 text-white bg-dark letter-spacing-2">3</button>
+            </div>
 
           </div>
         </div>

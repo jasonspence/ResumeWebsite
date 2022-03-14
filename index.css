@@ -242,7 +242,9 @@ select {
 
 
 .underline-indicators > * {
+    cursor: pointer;
     padding: var(--underline-gap, 1em) 0;
+    border: 0;
     border-bottom: .2rem solid hsl( var(--clr-white) / 0 );
     transition: all 500ms ease;
     background-color: transparent;
@@ -253,9 +255,62 @@ select {
     border-color: hsl( var(--clr-white) / .5);
 }
 
-.underline-indicators > .active {
+.underline-indicators > .active,
+.underline-indicators > [aria-selected="true"] {
+    color: hsl( var(--clr-white) );
     border-color: hsl( var(--clr-white) / 1);
 }
+
+.tabs-navigation {
+    --gap: 2.5rem;
+}
+
+.dots-navigation {
+    --gap: 1.25rem;
+}
+
+.dots-navigation > * {
+    cursor: pointer;
+    border: 0;
+    background-color: hsl( var(--clr-white) / .25);
+    padding: 0.5rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+}
+
+.dots-navigation > *:hover {
+    background-color: hsl( var(--clr-white) / .5);
+}
+
+.dots-navigation > [aria-selected="true"] {
+    background-color: hsl( var(--clr-white) );
+}
+
+.numbers-navigation {
+    --flow-space: 2rem;
+}
+
+.numbers-navigation > * {
+    cursor: pointer;
+    border: .15rem solid hsl( var(--clr-white) / .5);
+    display: grid;
+    place-items: center;
+    width: 4rem;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    transition: all 200ms;
+}
+
+.numbers-navigation > *:hover {
+    border-color: hsl( var(--clr-white) );
+}
+
+.numbers-navigation > [aria-selected="true"] {
+    color: hsl( var(--clr-dark) );
+    background-color: hsl( var(--clr-white) );
+}
+
+
 
 
 
