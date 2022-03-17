@@ -26,6 +26,23 @@
 
 
 /* --------------------- */
+/* Fonts                 */
+/* --------------------- */
+
+@font-face 
+{ 
+font-family: 'Legalitere';  
+src: url("./fonts/Legalitere/Legalitere.ttf"); 
+}
+
+@font-face 
+{ 
+font-family: 'Legalitere';  
+src: url("./fonts/Rockabye/RockabyeRegular.otf"); 
+}
+
+
+/* --------------------- */
 /* Reset                 */
 /* --------------------- */
 
