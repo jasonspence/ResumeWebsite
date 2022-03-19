@@ -37,7 +37,7 @@ src: url("./fonts/Legalitere/Legalitere.ttf");
 
 @font-face 
 { 
-font-family: 'Legalitere';  
+font-family: 'Rockabye';  
 src: url("./fonts/Rockabye/RockabyeRegular.otf"); 
 }
 
@@ -327,7 +327,29 @@ select {
     background-color: hsl( var(--clr-white) );
 }
 
+.logo1 {
+    font-family: 'Legalitere';
+}
 
+.logo2 {
+    z-index: 2; 
+    position: absolute; 
+    top: 3.8rem; 
+    left: 0; 
+    right: 0; 
+    padding-left: 0.15rem;
+    text-align: center;
+}
+
+.logo3 {
+    z-index: 2; 
+    position: 
+    absolute; 
+    top: 7.8rem; 
+    left: 0; 
+    right: 0; 
+    text-align: center;
+}
 
 
 
