@@ -337,11 +337,6 @@ nav {
     border-color: hsl( var(--clr-white) );
 }
 
-.numbers-navigation > [aria-selected="true"] {
-    color: hsl( var(--clr-dark) );
-    background-color: hsl( var(--clr-white) );
-}
-
 .logo1 {
     font-family: 'Legalitere';
 }
