@@ -247,7 +247,6 @@ select {
 .primary-header {
     display: flex;
     justify-content: stretch;
-    padding-bottom: 2.5rem;
 }
 
 nav {
@@ -367,6 +366,42 @@ nav {
     text-align: center;
 }
 
+.primary-body {
+    justify-content: center;
+    align-items: center;
+}
+
+.resume-button {
+    padding: 20px 40px;
+    font-size: 24px;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.resume-button:hover {
+    background-color: #0056b3;
+}
+
+.resume-button:active {
+    background-color: #0042a2;
+}
+
+.resume-button:focus {
+    outline: none;
+}
+
+.resume-button:visited {
+    color: #fff;
+}
+
+.resume-button > a {
+    color: #fff;
+    text-decoration: none;
+}
 
 
 .example-component {
