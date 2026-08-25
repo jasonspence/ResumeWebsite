@@ -86,7 +86,7 @@ async function fetchJsonWithTimeout(url, timeoutMs = LOOKUP_TIMEOUT_MS) {
   }
 }
 
-function extractDefinitionText(apiData) {
+function extractDictionaryApiDefinitionText(apiData) {
   if (!Array.isArray(apiData) || apiData.length === 0) return null;
 
   const firstEntry = apiData[0];
@@ -145,7 +145,7 @@ async function fetchDefinitionFromDictionaryApi(word) {
   }
 
   const data = await response.json();
-  const definition = extractDefinitionText(data);
+  const definition = extractDictionaryApiDefinitionText(data);
   if (!definition) {
     throw new Error("DictionaryAPI response format was unexpected");
   }
