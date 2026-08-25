@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Typing And Spelling</title>
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a href="../projects.html">← Back to projects</a>
+    <main class="app">
+      <h1>Typing And Spelling</h1>
+      <p class="subtitle">Type each word exactly to advance.</p>
+
+      <section class="card">
+        <label for="wordInput">Word: <span id="promptWord"></span></label>
+        <input id="wordInput" type="text" placeholder="Type the word" autocomplete="off" />
+        <button id="restartButton" type="button">Restart</button>
+        <p id="scoreDisplay" class="score" aria-live="polite">Words passed: 0 | Streak: 0 | Letters typed: 0 | Mistakes: 0</p>
+        <p id="efficiencyDisplay" class="score" aria-live="polite">Efficiency: 0/0 (0.0%) | Top streak: 0</p>
+        <p id="feedback" aria-live="polite"></p>
+      </section>
+
+      <section class="card">
+        <label>Previous Word: <span id="previousWord"></span></label>
+        <button id="trashPreviousButton" type="button">Move To Trash</button>
+        <button id="definePreviousButton" type="button">Define Previous Word</button>
+        <button id="downloadListsButton" type="button">Download Updated Lists</button>
+        <p class="shortcutHint">Shortcuts: 1 Trash | 2 Define | 3 Download Lists | 4 Restart</p>
+        <p id="definitionDisplay" class="definition" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

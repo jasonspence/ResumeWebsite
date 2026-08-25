@@ -1,0 +1,194 @@
+:root {
+  --bg: #12161d;
+  --panel: #1a212b;
+  --text: #e6edf3;
+  --accent: #3b82f6;
+  --accent-dark: #2563eb;
+  --border: #2c3644;
+  --success: #22c55e;
+  --error: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 20% 15%, #1b2431 0%, transparent 40%),
+    radial-gradient(circle at 80% 85%, #151b25 0%, transparent 35%),
+    var(--bg);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.app {
+  width: min(700px, 100%);
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3rem);
+  letter-spacing: 0.02em;
+}
+
+.subtitle {
+  margin-top: 8px;
+  opacity: 0.8;
+}
+
+.card {
+  margin-top: 20px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  display: grid;
+  gap: 12px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+label {
+  font-weight: 700;
+}
+
+#promptWord {
+  color: #93c5fd;
+}
+
+#previousWord {
+  color: #93c5fd;
+}
+
+input {
+  background: #11161f;
+  color: var(--text);
+  border: 1px solid #334154;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 1rem;
+}
+
+input::placeholder {
+  color: #94a3b8;
+}
+
+#restartButton {
+  width: fit-content;
+  border: 1px solid #334154;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: #151b25;
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#restartButton:hover {
+  background: #1d2633;
+}
+
+#trashPreviousButton {
+  width: fit-content;
+  border: 1px solid #334154;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: #151b25;
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#trashPreviousButton:hover {
+  background: #1d2633;
+}
+
+#definePreviousButton {
+  width: fit-content;
+  border: 1px solid #334154;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: #151b25;
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#definePreviousButton:hover {
+  background: #1d2633;
+}
+
+#downloadListsButton {
+  width: fit-content;
+  border: 1px solid #334154;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: #151b25;
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#downloadListsButton:hover {
+  background: #1d2633;
+}
+
+#trashPreviousButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#definePreviousButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.score {
+  margin: 0;
+  color: #cbd5e1;
+  font-weight: 700;
+}
+
+.shortcutHint {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+#feedback {
+  min-height: 1.2em;
+  margin: 0;
+  font-weight: 700;
+}
+
+.status.success {
+  color: var(--success);
+}
+
+.status.error {
+  color: var(--error);
+}
+
+.definition {
+  margin: 0;
+  min-height: 1.2em;
+  color: #cbd5e1;
+  white-space: pre-line;
+}
+
+.definition.loading {
+  color: #93c5fd;
+}
+
+.definition.success {
+  color: #cbd5e1;
+}
+
+.definition.error {
+  color: var(--error);
+}
