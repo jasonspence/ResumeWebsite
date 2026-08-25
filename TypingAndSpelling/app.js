@@ -370,7 +370,7 @@ wordInput.addEventListener("input", () => {
   if (!currentWord) return;
 
   const currentValue = wordInput.value;
-  const isWordMatched = currentValue.trim().toLowerCase() === currentWord.toLowerCase();
+  const isWordMatched = currentValue.toLowerCase() === currentWord.toLowerCase();
   const lengthDelta = currentValue.length - previousInputValue.length;
   let insertedChars = pendingInsertedChars;
   let removedChars = pendingRemovedChars;
