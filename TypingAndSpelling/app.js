@@ -1,16 +1,19 @@
 const wordInput = document.getElementById("wordInput");
 const restartButton = document.getElementById("restartButton");
+const developerModeButton = document.getElementById("developerModeButton");
 const trashPreviousButton = document.getElementById("trashPreviousButton");
 const definePreviousButton = document.getElementById("definePreviousButton");
 const downloadListsButton = document.getElementById("downloadListsButton");
 const scoreDisplay = document.getElementById("scoreDisplay");
 const efficiencyDisplay = document.getElementById("efficiencyDisplay");
 const feedback = document.getElementById("feedback");
+const shortcutHint = document.querySelector(".shortcutHint");
 const promptWordEl = document.getElementById("promptWord");
 const previousWordEl = document.getElementById("previousWord");
 const definitionDisplay = document.getElementById("definitionDisplay");
 
 let currentWord = "";
+let currentWordUnsanitized = "";
 let words = [];
 let wordsPassed = 0;
 let streak = 0;
@@ -21,7 +24,12 @@ let previousInputValue = "";
 let pendingInsertedChars = 0;
 let pendingRemovedChars = 0;
 let previousWord = "";
+let previousWordUnsanitized = "";
 let rejectedWords = [];
+let developerMode = false;
+let wordsLoaded = false;
+let rejectedWordsLoaded = false;
+let wordsLoadSucceeded = false;
 const definitionCache = new Map();
 const LOOKUP_TIMEOUT_MS = 8000;
 const LOOKUP_ROUNDS = 2;
@@ -36,6 +44,10 @@ function parseWordList(rawText) {
     .split(/\r?\n/)
     .map((word) => word.trim())
     .filter(Boolean);
+}
+
+function sanitizeWord(word) {
+  return word.replace(/[^\p{L} "'.,;-]/gu, "");
 }
 
 function getInsertedCharCount(event) {
@@ -54,8 +66,23 @@ function updateScore() {
 
 function updatePreviousWordDisplay() {
   previousWordEl.textContent = previousWord;
-  trashPreviousButton.disabled = !previousWord;
+  trashPreviousButton.disabled = !previousWord || !developerMode;
   definePreviousButton.disabled = !previousWord;
+}
+
+function updateDeveloperModeDisplay() {
+  developerModeButton.textContent = developerMode ? "Exit Developer Mode" : "Developer Mode";
+  developerModeButton.setAttribute("aria-pressed", String(developerMode));
+  trashPreviousButton.hidden = !developerMode;
+  downloadListsButton.hidden = !developerMode;
+  shortcutHint.textContent = developerMode
+    ? "Shortcuts: 0 Restart | 1 Define | 2 Trash | 3 Download Lists"
+    : "Shortcuts: 0 Restart | 1 Define";
+  updatePreviousWordDisplay();
+}
+
+function updateDownloadAvailability() {
+  downloadListsButton.disabled = !wordsLoaded || !rejectedWordsLoaded || !wordsLoadSucceeded;
 }
 
 function setDefinitionMessage(message, kind = "") {
@@ -241,6 +268,8 @@ function downloadTextFile(fileName, content) {
 }
 
 function downloadUpdatedLists() {
+  if (downloadListsButton.disabled) return;
+
   const sortedRejected = [...rejectedWords].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
   const wordsContent = words.length > 0 ? `${words.join("\n")}\n` : "";
   const rejectedContent = sortedRejected.length > 0 ? `${sortedRejected.join("\n")}\n` : "";
@@ -259,10 +288,14 @@ async function loadWord() {
     if (words.length === 0) throw new Error("Words file is empty.");
 
     setNextWord();
+    wordsLoadSucceeded = true;
   } catch (error) {
     promptWordEl.textContent = "Unavailable";
     feedback.textContent = error.message;
     feedback.className = "status error";
+  } finally {
+    wordsLoaded = true;
+    updateDownloadAvailability();
   }
 }
 
@@ -278,30 +311,52 @@ async function loadRejectedWords() {
     rejectedWords = parseWordList(raw);
   } catch {
     rejectedWords = [];
+  } finally {
+    rejectedWordsLoaded = true;
+    updateDownloadAvailability();
   }
 }
 
 function setNextWord() {
   if (currentWord) {
     previousWord = currentWord;
+    previousWordUnsanitized = currentWordUnsanitized;
     updatePreviousWordDisplay();
   }
 
-  if (words.length === 0) {
-    currentWord = "";
-    promptWordEl.textContent = "";
-    return;
+  while (words.length > 0) {
+    currentWordUnsanitized = pickRandomWord(words);
+    currentWord = sanitizeWord(currentWordUnsanitized);
+
+    if (currentWord) {
+      promptWordEl.textContent = currentWord;
+      wordInput.value = "";
+      previousInputValue = "";
+      pendingInsertedChars = 0;
+      pendingRemovedChars = 0;
+      feedback.textContent = "";
+      feedback.className = "";
+      return true;
+    }
+
+    rejectedWords.push(currentWordUnsanitized);
+    removeWordFromActiveList(currentWordUnsanitized);
   }
 
-  currentWord = pickRandomWord(words);
-  promptWordEl.textContent = currentWord;
+  currentWord = "";
+  currentWordUnsanitized = "";
+  promptWordEl.textContent = "";
   wordInput.value = "";
   previousInputValue = "";
   pendingInsertedChars = 0;
   pendingRemovedChars = 0;
+  feedback.textContent = "No words left in active list.";
+  feedback.className = "status error";
+  return false;
 }
 
 function restartSession() {
+  developerMode = false;
   wordsPassed = 0;
   streak = 0;
   topStreak = 0;
@@ -311,42 +366,39 @@ function restartSession() {
   pendingInsertedChars = 0;
   pendingRemovedChars = 0;
   previousWord = "";
+  previousWordUnsanitized = "";
   feedback.textContent = "";
   feedback.className = "";
   setDefinitionMessage("");
   updatePreviousWordDisplay();
   updateScore();
 
-  if (words.length > 0) {
-    currentWord = "";
-    setNextWord();
-  }
+  currentWord = "";
+  currentWordUnsanitized = "";
+  updateDeveloperModeDisplay();
+  setNextWord();
 }
 
 function trashPreviousWord() {
   if (!previousWord) return;
 
   const trashedWord = previousWord;
-  rejectedWords.push(trashedWord);
-  removeWordFromActiveList(trashedWord);
+  const trashedWordUnsanitized = previousWordUnsanitized;
+  rejectedWords.push(trashedWordUnsanitized);
+  removeWordFromActiveList(trashedWordUnsanitized);
   previousWord = "";
-  updatePreviousWordDisplay();
+  previousWordUnsanitized = "";
   setDefinitionMessage("");
+
+  if (currentWordUnsanitized === trashedWordUnsanitized) {
+    currentWord = "";
+    currentWordUnsanitized = "";
+    const hasNextWord = setNextWord();
+    if (!hasNextWord) return;
+  }
+
   feedback.textContent = `${trashedWord} moved to trash list.`;
   feedback.className = "status success";
-
-  if (currentWord === trashedWord) {
-    if (words.length > 0) {
-      currentWord = "";
-      setNextWord();
-    } else {
-      currentWord = "";
-      promptWordEl.textContent = "";
-      wordInput.value = "";
-      feedback.textContent = "No words left in active list.";
-      feedback.className = "status error";
-    }
-  }
 }
 
 wordInput.addEventListener("beforeinput", (event) => {
@@ -432,22 +484,30 @@ document.addEventListener("keydown", (event) => {
   if (event.ctrlKey || event.altKey || event.metaKey) return;
 
   const key = event.key;
-  if (key !== "1" && key !== "2" && key !== "3" && key !== "4") return;
+  if (key !== "0" && key !== "1" && key !== "2" && key !== "3") return;
+
+  if ((key === "2" || key === "3") && !developerMode) return;
 
   event.preventDefault();
 
-  if (key === "1" && !trashPreviousButton.disabled) {
-    trashPreviousWord();
-  } else if (key === "2" && !definePreviousButton.disabled) {
-    definePreviousWord();
-  } else if (key === "3") {
-    downloadUpdatedLists();
-  } else if (key === "4") {
+  if (key === "0") {
     restartSession();
+  } else if (key === "1" && !definePreviousButton.disabled) {
+    definePreviousWord();
+  } else if (key === "2" && !trashPreviousButton.disabled) {
+    trashPreviousWord();
+  } else if (key === "3" && !downloadListsButton.disabled) {
+    downloadUpdatedLists();
   }
 });
 
+developerModeButton.addEventListener("click", () => {
+  developerMode = !developerMode;
+  updateDeveloperModeDisplay();
+});
+
 updateScore();
+updateDeveloperModeDisplay();
 updatePreviousWordDisplay();
 setDefinitionMessage("");
 loadWord();

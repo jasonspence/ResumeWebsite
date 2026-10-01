@@ -8,13 +8,13 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <a href="../projects.html">← Back to projects</a>
+    <a class="back-button" href="../projects.html">← Back to projects</a>
     <main class="app">
       <h1>Typing And Spelling</h1>
       <p class="subtitle">Type each word exactly to advance.</p>
 
       <section class="card">
-        <label for="wordInput">Word: <span id="promptWord"></span></label>
+        <label for="wordInput">Word: <span id="promptWord" aria-live="polite"></span></label>
         <input id="wordInput" type="text" placeholder="Type the word" autocomplete="off" />
         <button id="restartButton" type="button">Restart</button>
         <p id="scoreDisplay" class="score" aria-live="polite">Words passed: 0 | Streak: 0 | Letters typed: 0 | Mistakes: 0</p>
@@ -22,12 +22,15 @@
         <p id="feedback" aria-live="polite"></p>
       </section>
 
-      <section class="card">
-        <label>Previous Word: <span id="previousWord"></span></label>
-        <button id="trashPreviousButton" type="button">Move To Trash</button>
+      <section class="card" aria-labelledby="previousWordHeading">
+        <div class="developer-controls-header">
+          <h2 id="previousWordHeading" class="previous-word-heading">Previous Word: <span id="previousWord"></span></h2>
+          <button id="developerModeButton" class="mode-toggle" type="button" aria-pressed="false">Developer Mode</button>
+        </div>
         <button id="definePreviousButton" type="button">Define Previous Word</button>
-        <button id="downloadListsButton" type="button">Download Updated Lists</button>
-        <p class="shortcutHint">Shortcuts: 1 Trash | 2 Define | 3 Download Lists | 4 Restart</p>
+        <button id="trashPreviousButton" type="button" hidden>Move To Trash</button>
+        <button id="downloadListsButton" type="button" hidden disabled>Download Updated Lists</button>
+        <p class="shortcutHint">Shortcuts: 0 Restart | 1 Define</p>
         <p id="definitionDisplay" class="definition" aria-live="polite"></p>
       </section>
     </main>
