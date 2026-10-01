@@ -14,6 +14,8 @@ The app randomly selects a raw entry from `words.txt`, sanitizes it for practice
 - efficiency as net letters over total letters (`(typed - removed) / typed`)
 - top streak
 
+Deleting characters while typing a word marks that word as imperfect. Completing an imperfect word resets the current streak and displays feedback; completing a word without deletions advances the streak normally.
+
 Sanitized words are created by removing all characters except letters, spaces, double quotes, apostrophes, periods, commas, hyphens, and semicolons. The original raw entry is retained for trashing and downloading.
 
 It also includes a `Previous Word` card with:

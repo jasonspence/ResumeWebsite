@@ -27,6 +27,7 @@ let previousWord = "";
 let previousWordUnsanitized = "";
 let rejectedWords = [];
 let developerMode = false;
+let currentWordHadMistake = false;
 let wordsLoaded = false;
 let rejectedWordsLoaded = false;
 let wordsLoadSucceeded = false;
@@ -334,6 +335,7 @@ function setNextWord() {
       previousInputValue = "";
       pendingInsertedChars = 0;
       pendingRemovedChars = 0;
+      currentWordHadMistake = false;
       feedback.textContent = "";
       feedback.className = "";
       return true;
@@ -350,6 +352,7 @@ function setNextWord() {
   previousInputValue = "";
   pendingInsertedChars = 0;
   pendingRemovedChars = 0;
+  currentWordHadMistake = false;
   feedback.textContent = "No words left in active list.";
   feedback.className = "status error";
   return false;
@@ -431,14 +434,7 @@ wordInput.addEventListener("input", () => {
     insertedChars = lengthDelta;
   }
 
-  const inferredRemoved = insertedChars - lengthDelta;
-  if (inferredRemoved > removedChars) {
-    removedChars = inferredRemoved;
-  }
-
-  if (removedChars < 0) {
-    removedChars = 0;
-  }
+  removedChars = Math.max(previousInputValue.length + insertedChars - currentValue.length, 0);
 
   let shouldRefreshScore = false;
 
@@ -449,7 +445,7 @@ wordInput.addEventListener("input", () => {
 
   if (removedChars > 0) {
     lettersRemoved += removedChars;
-    streak = 0;
+    currentWordHadMistake = true;
     shouldRefreshScore = true;
   }
 
@@ -458,20 +454,27 @@ wordInput.addEventListener("input", () => {
   pendingRemovedChars = 0;
 
   if (isWordMatched) {
+    const hadMistake = currentWordHadMistake;
     wordsPassed += 1;
-    streak += 1;
-    if (streak > topStreak) {
-      topStreak = streak;
+    if (hadMistake) {
+      streak = 0;
+    } else {
+      streak += 1;
+      if (streak > topStreak) {
+        topStreak = streak;
+      }
     }
     shouldRefreshScore = true;
+
+    const hasNextWord = setNextWord();
+    if (hadMistake && hasNextWord) {
+      feedback.textContent = "Word completed, but not perfectly typed.";
+      feedback.className = "status error";
+    }
   }
 
   if (shouldRefreshScore) {
     updateScore();
-  }
-
-  if (isWordMatched) {
-    setNextWord();
   }
 });
 
