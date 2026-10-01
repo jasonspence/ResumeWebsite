@@ -8,7 +8,7 @@ Created with Github Copilot
 
 The app randomly selects a raw entry from `words.txt`, sanitizes it for practice, and advances when your typed text matches it. Entries that become empty after sanitization are automatically moved to `rejected_words.txt` in memory. The app tracks:
 - words passed
-- streak (resets to 0 when deleting characters)
+- streak (resets to 0 when a word is completed after deleting characters)
 - letters typed
 - letters removed (Backspace/Delete when characters are actually removed)
 - efficiency as net letters over total letters (`(typed - removed) / typed`)

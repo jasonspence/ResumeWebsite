@@ -22,7 +22,6 @@ let lettersTyped = 0;
 let lettersRemoved = 0;
 let previousInputValue = "";
 let pendingInsertedChars = 0;
-let pendingRemovedChars = 0;
 let previousWord = "";
 let previousWordUnsanitized = "";
 let rejectedWords = [];
@@ -67,7 +66,7 @@ function updateScore() {
 
 function updatePreviousWordDisplay() {
   previousWordEl.textContent = previousWord;
-  trashPreviousButton.disabled = !previousWord || !developerMode;
+  trashPreviousButton.disabled = !previousWord;
   definePreviousButton.disabled = !previousWord;
 }
 
@@ -79,7 +78,6 @@ function updateDeveloperModeDisplay() {
   shortcutHint.textContent = developerMode
     ? "Shortcuts: 0 Restart | 1 Define | 2 Trash | 3 Download Lists"
     : "Shortcuts: 0 Restart | 1 Define";
-  updatePreviousWordDisplay();
 }
 
 function updateDownloadAvailability() {
@@ -334,7 +332,6 @@ function setNextWord() {
       wordInput.value = "";
       previousInputValue = "";
       pendingInsertedChars = 0;
-      pendingRemovedChars = 0;
       currentWordHadMistake = false;
       feedback.textContent = "";
       feedback.className = "";
@@ -351,7 +348,6 @@ function setNextWord() {
   wordInput.value = "";
   previousInputValue = "";
   pendingInsertedChars = 0;
-  pendingRemovedChars = 0;
   currentWordHadMistake = false;
   feedback.textContent = "No words left in active list.";
   feedback.className = "status error";
@@ -360,6 +356,8 @@ function setNextWord() {
 
 function restartSession() {
   developerMode = false;
+  updateDeveloperModeDisplay();
+
   wordsPassed = 0;
   streak = 0;
   topStreak = 0;
@@ -367,7 +365,6 @@ function restartSession() {
   lettersRemoved = 0;
   previousInputValue = "";
   pendingInsertedChars = 0;
-  pendingRemovedChars = 0;
   previousWord = "";
   previousWordUnsanitized = "";
   feedback.textContent = "";
@@ -378,26 +375,28 @@ function restartSession() {
 
   currentWord = "";
   currentWordUnsanitized = "";
-  updateDeveloperModeDisplay();
   setNextWord();
 }
 
 function trashPreviousWord() {
-  if (!previousWord) return;
+  if (!previousWord) {
+    console.error("trashPreviousWord called without a previous word");
+    trashPreviousButton.disabled = true;
+    return;
+  }
+
+  trashPreviousButton.disabled = true;
 
   const trashedWord = previousWord;
   const trashedWordUnsanitized = previousWordUnsanitized;
   rejectedWords.push(trashedWordUnsanitized);
   removeWordFromActiveList(trashedWordUnsanitized);
-  previousWord = "";
-  previousWordUnsanitized = "";
-  setDefinitionMessage("");
 
   if (currentWordUnsanitized === trashedWordUnsanitized) {
     currentWord = "";
     currentWordUnsanitized = "";
     const hasNextWord = setNextWord();
-    if (!hasNextWord) return;
+    if (!hasNextWord) return;  // Don't overwrite error messages
   }
 
   feedback.textContent = `${trashedWord} moved to trash list.`;
@@ -405,20 +404,7 @@ function trashPreviousWord() {
 }
 
 wordInput.addEventListener("beforeinput", (event) => {
-  const start = wordInput.selectionStart ?? 0;
-  const end = wordInput.selectionEnd ?? 0;
-  const selectionLength = Math.max(end - start, 0);
-
   pendingInsertedChars = getInsertedCharCount(event);
-  pendingRemovedChars = 0;
-
-  if (selectionLength > 0) {
-    if (event.inputType?.startsWith("insert") || event.inputType?.startsWith("delete")) {
-      pendingRemovedChars = selectionLength;
-    }
-  } else if (event.inputType === "deleteContentBackward" || event.inputType === "deleteContentForward") {
-    pendingRemovedChars = 1;
-  }
 });
 
 wordInput.addEventListener("input", () => {
@@ -428,7 +414,7 @@ wordInput.addEventListener("input", () => {
   const isWordMatched = currentValue.toLowerCase() === currentWord.toLowerCase();
   const lengthDelta = currentValue.length - previousInputValue.length;
   let insertedChars = pendingInsertedChars;
-  let removedChars = pendingRemovedChars;
+  let removedChars;
 
   if (insertedChars === 0 && lengthDelta > 0) {
     insertedChars = lengthDelta;
@@ -451,7 +437,6 @@ wordInput.addEventListener("input", () => {
 
   previousInputValue = currentValue;
   pendingInsertedChars = 0;
-  pendingRemovedChars = 0;
 
   if (isWordMatched) {
     const hadMistake = currentWordHadMistake;
@@ -497,9 +482,9 @@ document.addEventListener("keydown", (event) => {
     restartSession();
   } else if (key === "1" && !definePreviousButton.disabled) {
     definePreviousWord();
-  } else if (key === "2" && !trashPreviousButton.disabled) {
+  } else if (key === "2" && !trashPreviousButton.disabled && !trashPreviousButton.hidden) {
     trashPreviousWord();
-  } else if (key === "3" && !downloadListsButton.disabled) {
+  } else if (key === "3" && !downloadListsButton.disabled && !downloadListsButton.hidden) {
     downloadUpdatedLists();
   }
 });

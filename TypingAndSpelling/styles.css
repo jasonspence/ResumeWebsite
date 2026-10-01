@@ -173,7 +173,8 @@ input::placeholder {
 }
 
 #trashPreviousButton:disabled,
-#definePreviousButton:disabled {
+#definePreviousButton:disabled,
+#downloadListsButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
