@@ -61,4 +61,4 @@ Press Ctrl+C in Git Bash to stop the server.
 - Replace random draw with frequency-based draw that weights failed words higher.
 - Replace random draw with frequency-based draw that weights failed letters higher.
 - Indicate with red colour immediately upon a mistake.
-- Allow for dictionary search after trashing word.
+- Ignore async dictionary responses after moving to a next word.

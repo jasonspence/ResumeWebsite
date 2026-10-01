@@ -70,6 +70,11 @@ function updatePreviousWordDisplay() {
   definePreviousButton.disabled = !previousWord;
 }
 
+function setDefinitionMessage(message, kind = "") {
+  definitionDisplay.textContent = message;
+  definitionDisplay.className = kind ? `definition ${kind}` : "definition";
+}
+
 function updateDeveloperModeDisplay() {
   developerModeButton.textContent = developerMode ? "Exit Developer Mode" : "Developer Mode";
   developerModeButton.setAttribute("aria-pressed", String(developerMode));
@@ -82,11 +87,6 @@ function updateDeveloperModeDisplay() {
 
 function updateDownloadAvailability() {
   downloadListsButton.disabled = !wordsLoaded || !rejectedWordsLoaded || !wordsLoadSucceeded;
-}
-
-function setDefinitionMessage(message, kind = "") {
-  definitionDisplay.textContent = message;
-  definitionDisplay.className = kind ? `definition ${kind}` : "definition";
 }
 
 function delay(ms) {
@@ -237,21 +237,17 @@ async function definePreviousWord() {
 
   try {
     const result = await lookupDefinition(previousWord);
-    if (result.source === "DictionaryAPI") {
-      setDefinitionMessage(`Backup dictionary: ${previousWord}: ${result.definition}`, "success");
-    } else {
+    if (result.source === "Datamuse") {
       setDefinitionMessage(`${previousWord}:\n${result.definition}`, "success");
+    } else {
+      setDefinitionMessage(`Backup dictionary: ${previousWord}: ${result.definition}`, "success");
     }
   } catch (error) {
     console.error("Definition lookup failed", { word: previousWord, error });
-    setDefinitionMessage(error.message || "Could not load definition.", "error");
+    setDefinitionMessage(`${previousWord}: Could not find definition.`, "error");
   } finally {
     definePreviousButton.disabled = !previousWord;
   }
-}
-
-function removeWordFromActiveList(wordToRemove) {
-  words = words.filter((word) => word !== wordToRemove);
 }
 
 function downloadTextFile(fileName, content) {
@@ -314,6 +310,10 @@ async function loadRejectedWords() {
     rejectedWordsLoaded = true;
     updateDownloadAvailability();
   }
+}
+
+function removeWordFromActiveList(wordToRemove) {
+  words = words.filter((word) => word !== wordToRemove);
 }
 
 function setNextWord() {
