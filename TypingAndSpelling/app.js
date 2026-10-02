@@ -47,7 +47,7 @@ function parseWordList(rawText) {
 }
 
 function sanitizeWord(word) {
-  return word.replace(/[^\p{L} "'.,;-]/gu, "");
+  return word.replace(/[^\p{L} "'.,;-]/gu, "").toLowerCase();
 }
 
 function getInsertedCharCount(event) {
@@ -73,6 +73,12 @@ function updatePreviousWordDisplay() {
 function setDefinitionMessage(message, kind = "") {
   definitionDisplay.textContent = message;
   definitionDisplay.className = kind ? `definition ${kind}` : "definition";
+}
+
+function flashInputError() {
+  wordInput.classList.remove("input-error-flash");
+  void wordInput.offsetWidth;
+  wordInput.classList.add("input-error-flash");
 }
 
 function updateDeveloperModeDisplay() {
@@ -417,18 +423,15 @@ wordInput.addEventListener("beforeinput", (event) => {
 wordInput.addEventListener("input", () => {
   if (!currentWord) return;
 
-  const currentValue = wordInput.value;
-  const isWordMatched = currentValue.toLowerCase() === currentWord.toLowerCase();
+  const currentValue = wordInput.value.toLowerCase();
   const lengthDelta = currentValue.length - previousInputValue.length;
   let insertedChars = pendingInsertedChars;
-  let removedChars;
-
   if (insertedChars === 0 && lengthDelta > 0) {
     insertedChars = lengthDelta;
   }
-
-  removedChars = Math.max(previousInputValue.length + insertedChars - currentValue.length, 0);
-
+  let removedChars = Math.max(previousInputValue.length + insertedChars - currentValue.length, 0);
+  const isWordMatched = currentValue === currentWord;
+  const isValidPrefix = insertedChars <= 0 || currentWord.startsWith(currentValue);
   let shouldRefreshScore = false;
 
   if (insertedChars > 0) {
@@ -440,6 +443,11 @@ wordInput.addEventListener("input", () => {
     lettersRemoved += removedChars;
     currentWordHadMistake = true;
     shouldRefreshScore = true;
+  }
+
+  if (!isValidPrefix) {
+    currentWordHadMistake = true;
+    flashInputError();
   }
 
   previousInputValue = currentValue;

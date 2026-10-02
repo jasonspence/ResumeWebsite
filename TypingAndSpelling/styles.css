@@ -116,6 +116,26 @@ input::placeholder {
   color: #94a3b8;
 }
 
+input:focus-visible {
+  outline: 2px solid #64748b;
+  outline-offset: 2px;
+}
+
+input.input-error-flash {
+  animation: input-error-flash 180ms ease-out;
+}
+
+@keyframes input-error-flash {
+  0% {
+    border-color: var(--error);
+    background: #301a1a;
+  }
+  100% {
+    border-color: #334154;
+    background: #11161f;
+  }
+}
+
 #restartButton {
   width: fit-content;
   border: 1px solid #334154;
