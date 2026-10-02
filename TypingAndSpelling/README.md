@@ -1,40 +1,87 @@
 # Typing And Spelling
 
-Simple front-end JavaScript typing app.
+A typing app to learn words.
+Try it out on [my website](https://www.jasonspence.ca/TypingAndSpelling/)
 
-Created with Github Copilot
+## Data Attribution
+ 
+This project uses a word list derived from the **English Speller Database
+(ESDB)**, generated via [app.aspell.net](https://app.aspell.net/create).
+ 
+ESDB is © 2000–2026 Kevin Atkinson, used here under its permissive license.
+See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for the full copyright
+and license notice, which applies only to the included word list data, not
+to this app's own source code.
+ 
+Word ordering was informed by frequency data from Peter Norvig's
+[`count_1w.txt`](https://norvig.com/ngrams/count_1w.txt) (from *Beautiful
+Data*, 2009). That frequency data is **used as a build-time tool only**, is
+**not included** in this repository, and no frequency values appear in the
+committed output — see [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)
+for why this distinction matters.
 
-20,000 English Words list obtained from eyturner: https://gist.github.com/eyturner/3d56f6a194f411af9f29df4c9d4a4e6e
+Definitions are performed via real-time lookup, using [freedictionaryapi.dev](https://freedictionaryapi.com/), with [datamuse.com](https://www.datamuse.com/) as a backup.
 
-The app randomly selects a raw entry from `words.txt`, sanitizes it for practice, and advances when your typed text matches it. Entries that become empty after sanitization are automatically moved to `rejected_words.txt` in memory. The app tracks:
-- words passed
-- streak (resets to 0 when a word is completed after deleting characters)
-- letters typed
-- letters removed (Backspace/Delete when characters are actually removed)
-- efficiency as net letters over total letters (`(typed - removed) / typed`)
-- top streak
+## Features
 
-Deleting characters or adding a character that makes the input stop matching a prefix of the prompt marks that word as imperfect. Invalid inserted characters briefly flash the input border red. Completing an imperfect word resets the current streak and displays feedback; completing a word without mistakes advances the streak normally.
+- A customized 35,000+ word list
+- Live stats for both words and letters
+- Built-in dictionary (requires internet) to look up definitions without leaving the app
+- Immediate mistake feedback (flashing red text field)
+- Keyboard shortcuts for restarting & searching a definition
+- Developer mode to modify word lists and download updated lists
+- Responsive design for mobile and desktop
 
-Sanitized words are created by removing all characters except letters, spaces, double quotes, apostrophes, periods, commas, hyphens, and semicolons. The original raw entry is retained for trashing and downloading.
+## How It Works
 
-It also includes a `Previous Word` card with:
-- `Developer Mode` to reveal developer-only trash and download controls
-- `Define Previous Word` to fetch definitions (Datamuse first, DictionaryAPI as backup)
-- `Move To Trash` to remove that word from the active in-memory list
-- `Download Updated Lists` to export both the current smaller `words.txt` and an alphabetically sorted `rejected_words.txt`
+The app randomly selects a raw entry from `words.txt`, sanitizes it for practice, and advances when your typed text matches it. Sanitized words are stripped of numbers and most symbols, and are case-insensitive.
 
-Keyboard shortcuts are `0` for restart, `1` for defining the previous word, `2` for trashing the previous word, and `3` for downloading the updated lists. The trash and download shortcuts only work in Developer Mode; otherwise `2` and `3` can be typed normally.
+The app tracks your typing stats:
+- words typed
+- streak (resets to 0 when a word is completed after making mistakes)
+- correct letters (only counts correct letters)
+- mistakes (letters removed)
+- efficiency as correct letters over total letters (`(typed - removed) / typed`)
+- highest streak
 
-The download control remains unavailable until both word lists have finished loading.
+Typing an incorrect character or deleting characters marks that word as imperfect, which resets the current streak. Completing a word without mistakes advances the streak normally.
 
-Trashed words won't save permanently. At the end of a session, download the updated lists and manually copy them into the source code.
+After completing a word, find out its definition by clicking `Define Previous Word` to fetch definitions from online dictionary APIs.
+
+Keyboard shortcuts are `0` to restart, and `1` for defining the previous word. 
+
+## Developer Notes
+
+### Editing the Word List
+
+To reject words from the word list as you type, open `Developer Mode` by clicking the button on the **Previous Word** card. 
+After completing a word, a new "trash" button and keyboard shortcut `2` will be available to automatically move that word to a rejected words list. Entries that become empty after sanitization are also automatically trashed. The original unsanitized entry is retained for these manipulations.
+
+Trashed words won't save permanently. At the end of a session, download the updated lists and manually copy them into the source code. 
+The keyboard shortcut to download the lists is `3`.
+Note that the download control remains unavailable until the word list and the previously rejected word list have finished loading.
+
+### Rebuilding `words.txt` From Scratch
+ 
+1. Download `count_1w.txt` from
+   https://norvig.com/ngrams/count_1w.txt
+2. Run `python ./Scripts/sort_words_by_frequency.py ./Scripts/ESDB_35_CA.txt count_1w.txt words.txt missing.txt`
+   - this strips the ESDB header automatically, removes proper nouns, and sorts the result by frequency
+3. `words.txt` is the final word list; `missing.txt` lists any ESDB words not
+   found in the frequency data (for review)
+
 
 ## Project Files
 
-- index.html
-- styles.css
-- app.js
+- `index.html`
+- `styles.css`
+- `app.js`
+- `words.txt` — Default word list: proper nouns removed, filtered and sorted by frequency
+- `Scripts/`
+    - `ESDB_35_CA.txt` — Raw downloaded word list from ESDB (size 35, CA spelling)
+    - `sort_words_by_frequency.py` — Script to generate `words.txt`
+    - `look_up_word.py` — Sandbox script to test dictionary API responses
+
 
 ## Run Locally With Python
 
@@ -60,4 +107,5 @@ Press Ctrl+C in Git Bash to stop the server.
 
 - Replace random draw with frequency-based draw that weights failed words higher.
 - Replace random draw with frequency-based draw that weights failed letters higher.
-- Indicate with red colour immediately upon a mistake.
+- Display dictionary results from all dictionaries.
+- Add helper setFeedbackMessage function

@@ -32,7 +32,7 @@ let rejectedWordsLoaded = false;
 let wordsLoadSucceeded = false;
 const definitionCache = new Map();
 const LOOKUP_TIMEOUT_MS = 8000;
-const LOOKUP_ROUNDS = 2;
+const LOOKUP_ROUNDS = 1;
 
 function pickRandomWord(wordList) {
   const index = Math.floor(Math.random() * wordList.length);
@@ -60,7 +60,7 @@ function updateScore() {
   const netLetters = lettersTyped - lettersRemoved;
   const efficiencyPercent = lettersTyped === 0 ? 0 : (netLetters / lettersTyped) * 100;
 
-  scoreDisplay.textContent = `Words passed: ${wordsPassed} | Streak: ${streak} | Letters typed: ${netLetters} | Mistakes: ${lettersRemoved}`;
+  scoreDisplay.textContent = `Words typed: ${wordsPassed} | Streak: ${streak} | Correct letters: ${netLetters} | Mistakes: ${lettersRemoved}`;
   efficiencyDisplay.textContent = `Efficiency: ${netLetters}/${lettersTyped} (${efficiencyPercent.toFixed(1)}%) | Top streak: ${topStreak}`;
 }
 
@@ -118,20 +118,39 @@ async function fetchJsonWithTimeout(url, timeoutMs = LOOKUP_TIMEOUT_MS) {
   }
 }
 
-function extractDictionaryApiDefinitionText(apiData) {
-  if (!Array.isArray(apiData) || apiData.length === 0) return null;
+function extractFreeDictionaryApiDefinitionText(apiData) {
+  if (!Array.isArray(apiData.entries) || apiData.entries.length === 0) return null;
 
-  const firstEntry = apiData[0];
-  if (!Array.isArray(firstEntry.meanings) || firstEntry.meanings.length === 0) return null;
+  const definitions = [];
 
-  const firstMeaning = firstEntry.meanings[0];
-  if (!Array.isArray(firstMeaning.definitions) || firstMeaning.definitions.length === 0) return null;
+  for (const entry of apiData.entries) {
+    if (typeof entry.partOfSpeech !== "string") continue;
+    definitions.push(entry.partOfSpeech);
 
-  const firstDefinition = firstMeaning.definitions[0];
-  if (!firstDefinition?.definition) return null;
+    if (!Array.isArray(entry.senses)) continue;
+    let i = 0;
+    for (const sense of entry.senses) {
+      if (typeof sense.definition !== "string") continue;
+      i += 1;
 
-  const partOfSpeech = firstMeaning.partOfSpeech ? ` (${firstMeaning.partOfSpeech})` : "";
-  return `${firstDefinition.definition}${partOfSpeech}`;
+      const formatted = `    ${i}. ${sense.definition}`;
+      definitions.push(formatted);
+
+      if (!Array.isArray(sense.subsenses)) continue;
+      let j = 0;
+      for (const subsense of sense.subsenses) {
+        if (typeof subsense.definition !== "string") continue;
+        j += 1;
+
+        const formatted = `        ${i}.${j} ${subsense.definition}`;
+        definitions.push(formatted)
+      }
+    }
+  }
+
+  if (definitions.length === 0) return null;
+
+  return definitions.join("\n");
 }
 
 function extractDatamuseDefinitionText(apiData, requestedWord) {
@@ -166,20 +185,18 @@ function extractDatamuseDefinitionText(apiData, requestedWord) {
   return uniqueDefinitions.map((definition, index) => `${index + 1}. ${definition}`).join("\n");
 }
 
-async function fetchDefinitionFromDictionaryApi(word) {
-  const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`;
+async function fetchDefinitionFromFreeDictionaryApi(word) {
+  const url = `https://freedictionaryapi.com/api/v1/entries/en/${encodeURIComponent(word)}`
   const response = await fetchJsonWithTimeout(url);
 
   if (!response.ok) {
-    const retryAfter = parseRetryAfterSeconds(response.headers.get("retry-after"));
-    const retryHint = retryAfter !== null ? ` (retry-after ${retryAfter}s)` : "";
-    throw new Error(`DictionaryAPI HTTP ${response.status}${retryHint}`);
+    throw new Error(`FreeDictionaryAPI HTTP ${response.status}`);
   }
 
   const data = await response.json();
-  const definition = extractDictionaryApiDefinitionText(data);
+  const definition = extractFreeDictionaryApiDefinitionText(data);
   if (!definition) {
-    throw new Error("DictionaryAPI response format was unexpected");
+    throw new Error("Free Dictionary API had no definition for this word");
   }
 
   return definition;
@@ -209,8 +226,8 @@ async function lookupDefinition(word) {
   }
 
   const sources = [
+    { name: "FreeDictionaryAPI", lookup: fetchDefinitionFromFreeDictionaryApi },
     { name: "Datamuse", lookup: fetchDefinitionFromDatamuse },
-    { name: "DictionaryAPI", lookup: fetchDefinitionFromDictionaryApi },
   ];
   const failures = [];
 
@@ -250,11 +267,7 @@ async function definePreviousWord() {
   try {
     const result = await lookupDefinition(lookupWord);
     if (lookupWord !== previousWord) return;
-    if (result.source === "Datamuse") {
-      setDefinitionMessage(`${lookupWord}:\n${result.definition}`, "success");
-    } else {
-      setDefinitionMessage(`Backup dictionary: ${lookupWord}: ${result.definition}`, "success");
-    }
+    setDefinitionMessage(`${result.source} definition of ${lookupWord}:\n${result.definition}`, "success");
   } catch (error) {
     console.error("Definition lookup failed", { word: lookupWord, error });
     if (lookupWord !== previousWord) return;
