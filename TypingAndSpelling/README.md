@@ -107,5 +107,6 @@ Press Ctrl+C in Git Bash to stop the server.
 
 - Replace random draw with frequency-based draw that weights failed words higher.
 - Replace random draw with frequency-based draw that weights failed letters higher.
-- Display dictionary results from all dictionaries.
+- Occasionally select from previously misspelled words
+- Record key-specific stats
 - Add helper setFeedbackMessage function
