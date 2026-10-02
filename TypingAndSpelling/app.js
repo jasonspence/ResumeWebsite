@@ -230,23 +230,30 @@ async function lookupDefinition(word) {
 }
 
 async function definePreviousWord() {
-  if (!previousWord) return;
+  if (!previousWord) {
+    console.error("definePreviousWord called without a previous word");
+    definePreviousButton.disabled = true;
+    return;
+  }
 
   definePreviousButton.disabled = true;
   setDefinitionMessage("Looking up definition...", "loading");
 
+  const lookupWord = previousWord;
+
   try {
-    const result = await lookupDefinition(previousWord);
+    const result = await lookupDefinition(lookupWord);
+    if (lookupWord !== previousWord) return;
     if (result.source === "Datamuse") {
-      setDefinitionMessage(`${previousWord}:\n${result.definition}`, "success");
+      setDefinitionMessage(`${lookupWord}:\n${result.definition}`, "success");
     } else {
-      setDefinitionMessage(`Backup dictionary: ${previousWord}: ${result.definition}`, "success");
+      setDefinitionMessage(`Backup dictionary: ${lookupWord}: ${result.definition}`, "success");
     }
   } catch (error) {
-    console.error("Definition lookup failed", { word: previousWord, error });
-    setDefinitionMessage(`${previousWord}: Could not find definition.`, "error");
-  } finally {
-    definePreviousButton.disabled = !previousWord;
+    console.error("Definition lookup failed", { word: lookupWord, error });
+    if (lookupWord !== previousWord) return;
+    setDefinitionMessage(`${lookupWord}: Could not find definition.`, "error");
+    definePreviousButton.disabled = false;
   }
 }
 
