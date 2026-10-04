@@ -34,6 +34,8 @@ let rejectedWordsLoaded = false;
 let wordsLoadSucceeded = false;
 
 function pickRandomWord(wordList) {
+  if (wordList.length <= 0) return null;
+
   const index = Math.floor(Math.random() * wordList.length);
   return wordList[index];
 }
@@ -46,7 +48,7 @@ function parseWordList(rawText) {
 }
 
 function sanitizeWord(word) {
-  return word.replace(/[^\p{L} "'.,;-]/gu, "").toLowerCase();
+  return word.toLowerCase();
 }
 
 function getInsertedCharCount(event) {
@@ -81,6 +83,11 @@ function updateDeveloperModeDisplay() {
 
 function updateDownloadAvailability() {
   downloadListsButton.disabled = !wordsLoaded || !rejectedWordsLoaded || !wordsLoadSucceeded;
+}
+
+function setFeedbackMessage(message, status = "") {
+  feedback.textContent = message;
+  feedback.className = status ? `status ${status}` : "status";
 }
 
 function setDefinitionMessage(message, kind = "") {
@@ -141,7 +148,7 @@ function downloadUpdatedLists() {
   downloadTextFile("rejected_words.txt", rejectedContent);
 }
 
-async function loadWord() {
+async function loadWords() {
   try {
     const response = await fetch("words.txt");
     if (!response.ok) throw new Error("Could not load words file.");
@@ -154,8 +161,7 @@ async function loadWord() {
     wordsLoadSucceeded = true;
   } catch (error) {
     promptWordEl.textContent = "Unavailable";
-    feedback.textContent = error.message;
-    feedback.className = "status error";
+    setFeedbackMessage(error.message, "error");
   } finally {
     wordsLoaded = true;
     updateDownloadAvailability();
@@ -184,6 +190,15 @@ function removeWordFromActiveList(wordToRemove) {
   words = words.filter((word) => word !== wordToRemove);
 }
 
+function chooseNextWord() {
+  let chosenWord = null;
+
+  // Choose from several options
+  chosenWord = pickRandomWord(words);
+
+  return chosenWord;
+}
+
 function setNextWord() {
   if (currentWord) {
     previousWord = currentWord;
@@ -191,52 +206,45 @@ function setNextWord() {
     updatePreviousWordDisplay();
   }
 
-  while (words.length > 0) {
-    currentWordUnsanitized = pickRandomWord(words);
-    currentWord = sanitizeWord(currentWordUnsanitized);
-
-    if (currentWord) {
-      promptWordEl.textContent = currentWord;
-      wordInput.value = "";
-      previousInputValue = "";
-      pendingInsertedChars = 0;
-      currentWordHadMistake = false;
-      feedback.textContent = "";
-      feedback.className = "";
-      return true;
-    }
-
-    rejectedWords.push(currentWordUnsanitized);
-    removeWordFromActiveList(currentWordUnsanitized);
+  clearWordInput();
+  currentWordHadMistake = false;
+  
+  currentWordUnsanitized = chooseNextWord(words);
+  if (currentWordUnsanitized === null) {
+    currentWordUnsanitized = "";
+    currentWord = "";
+    promptWordEl.textContent = "";
+    setFeedbackMessage("No words left in active list.", "error");
+    return false;
   }
+  currentWord = sanitizeWord(currentWordUnsanitized);
+  promptWordEl.textContent = currentWord;
+  setFeedbackMessage("");
+  return true;
+}
 
-  currentWord = "";
-  currentWordUnsanitized = "";
-  promptWordEl.textContent = "";
+function clearWordInput() {
   wordInput.value = "";
   previousInputValue = "";
   pendingInsertedChars = 0;
-  currentWordHadMistake = false;
-  feedback.textContent = "No words left in active list.";
-  feedback.className = "status error";
-  return false;
+}
+
+function clearStats() {
+  wordsPassed = 0;
+  streak = 0;
+  topStreak = 0;
+  lettersTyped = 0;
+  lettersRemoved = 0;
 }
 
 function restartSession() {
   developerMode = false;
   updateDeveloperModeDisplay();
 
-  wordsPassed = 0;
-  streak = 0;
-  topStreak = 0;
-  lettersTyped = 0;
-  lettersRemoved = 0;
-  previousInputValue = "";
-  pendingInsertedChars = 0;
+  clearStats();
   previousWord = "";
   previousWordUnsanitized = "";
-  feedback.textContent = "";
-  feedback.className = "";
+  setFeedbackMessage("");
   setDefinitionMessage("");
   updatePreviousWordDisplay();
   updateScore();
@@ -267,8 +275,7 @@ function trashPreviousWord() {
     if (!hasNextWord) return;  // Don't overwrite error messages
   }
 
-  feedback.textContent = `${trashedWord} moved to trash list.`;
-  feedback.className = "status success";
+  setFeedbackMessage(`${trashedWord} moved to trash list.`, "success");
 }
 
 wordInput.addEventListener("beforeinput", (event) => {
@@ -323,8 +330,7 @@ wordInput.addEventListener("input", () => {
 
     const hasNextWord = setNextWord();
     if (hadMistake && hasNextWord) {
-      feedback.textContent = "Word completed, but not perfectly typed.";
-      feedback.className = "status error";
+      setFeedbackMessage("Word completed, but not perfectly typed.", "error");
     }
   }
 
@@ -368,5 +374,5 @@ updateScore();
 updateDeveloperModeDisplay();
 updatePreviousWordDisplay();
 setDefinitionMessage("");
-loadWord();
+loadWords();
 loadRejectedWords();

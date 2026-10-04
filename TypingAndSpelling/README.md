@@ -34,7 +34,7 @@ Definitions are performed via real-time lookup, using [freedictionaryapi.dev](ht
 
 ## How It Works
 
-The app randomly selects a raw entry from `words.txt`, sanitizes it for practice, and advances when your typed text matches it. Sanitized words are stripped of numbers and most symbols, and are case-insensitive.
+The app randomly selects a raw entry from `words.txt`, presents it for practice, and advances when your typed text matches it (case insensitive). 
 
 The app tracks your typing stats:
 - words typed
