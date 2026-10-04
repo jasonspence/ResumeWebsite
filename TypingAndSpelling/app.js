@@ -32,7 +32,7 @@ let rejectedWordsLoaded = false;
 let wordsLoadSucceeded = false;
 const definitionCache = new Map();
 const LOOKUP_TIMEOUT_MS = 8000;
-const LOOKUP_ROUNDS = 1;
+const LOOKUP_TIMEOUT_ATTEMPTS = 2;
 
 function pickRandomWord(wordList) {
   const index = Math.floor(Math.random() * wordList.length);
@@ -97,13 +97,6 @@ function updateDownloadAvailability() {
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function parseRetryAfterSeconds(value) {
-  if (!value) return null;
-  const asNumber = Number(value);
-  if (Number.isFinite(asNumber)) return asNumber;
-  return null;
 }
 
 async function fetchJsonWithTimeout(url, timeoutMs = LOOKUP_TIMEOUT_MS) {
@@ -231,21 +224,23 @@ async function lookupDefinition(word) {
   ];
   const failures = [];
 
-  for (let round = 1; round <= LOOKUP_ROUNDS; round += 1) {
-    for (const source of sources) {
+  for (const source of sources) {
+    for (let attempt = 1; attempt <= LOOKUP_TIMEOUT_ATTEMPTS; attempt += 1) {
       try {
         const definition = await source.lookup(word);
         const result = { source: source.name, definition };
         definitionCache.set(cacheKey, result);
         return result;
       } catch (error) {
-        const reason = error?.name === "AbortError" ? "request timed out" : (error?.message || "unknown error");
+        const isTimeout = error?.name === "AbortError";
+        const reason = isTimeout ? "request timed out" : (error?.message || "unknown error");
         failures.push(`${source.name}: ${reason}`);
-      }
-    }
 
-    if (round < LOOKUP_ROUNDS) {
-      await delay(750 * round);
+        if (!isTimeout) break;
+        if (attempt < LOOKUP_TIMEOUT_ATTEMPTS) {
+          await delay(750 * attempt);
+        }
+      }
     }
   }
 
