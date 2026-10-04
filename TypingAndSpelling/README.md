@@ -20,7 +20,7 @@ Data*, 2009). That frequency data is **used as a build-time tool only**, is
 committed output — see [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)
 for why this distinction matters.
 
-Definitions are performed via real-time lookup, using [freedictionaryapi.dev](https://freedictionaryapi.com/), with [datamuse.com](https://www.datamuse.com/) as a backup.
+Definitions are performed via real-time lookup, using [freedictionaryapi.dev](https://freedictionaryapi.com/), with [datamuse.com](https://www.datamuse.com/) as a backup. Some specific definitions that rely on related words (plural, gerund, etc.) trigger additional lookups of their related words.
 
 ## Features
 
@@ -76,6 +76,7 @@ Note that the download control remains unavailable until the word list and the p
 - `index.html`
 - `styles.css`
 - `app.js`
+- `dictionary.js` — A module that uses various APIs to generate a plain-text definition
 - `words.txt` — Default word list: proper nouns removed, filtered and sorted by frequency
 - `Scripts/`
     - `ESDB_35_CA.txt` — Raw downloaded word list from ESDB (size 35, CA spelling)

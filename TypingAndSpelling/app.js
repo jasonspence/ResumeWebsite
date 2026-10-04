@@ -1,3 +1,5 @@
+import { lookupDefinition } from "./dictionary.js";
+
 const wordInput = document.getElementById("wordInput");
 const restartButton = document.getElementById("restartButton");
 const developerModeButton = document.getElementById("developerModeButton");
@@ -30,9 +32,6 @@ let currentWordHadMistake = false;
 let wordsLoaded = false;
 let rejectedWordsLoaded = false;
 let wordsLoadSucceeded = false;
-const definitionCache = new Map();
-const LOOKUP_TIMEOUT_MS = 8000;
-const LOOKUP_TIMEOUT_ATTEMPTS = 2;
 
 function pickRandomWord(wordList) {
   const index = Math.floor(Math.random() * wordList.length);
@@ -70,17 +69,6 @@ function updatePreviousWordDisplay() {
   definePreviousButton.disabled = !previousWord;
 }
 
-function setDefinitionMessage(message, kind = "") {
-  definitionDisplay.textContent = message;
-  definitionDisplay.className = kind ? `definition ${kind}` : "definition";
-}
-
-function flashInputError() {
-  wordInput.classList.remove("input-error-flash");
-  void wordInput.offsetWidth;
-  wordInput.classList.add("input-error-flash");
-}
-
 function updateDeveloperModeDisplay() {
   developerModeButton.textContent = developerMode ? "Exit Developer Mode" : "Developer Mode";
   developerModeButton.setAttribute("aria-pressed", String(developerMode));
@@ -95,156 +83,15 @@ function updateDownloadAvailability() {
   downloadListsButton.disabled = !wordsLoaded || !rejectedWordsLoaded || !wordsLoadSucceeded;
 }
 
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function setDefinitionMessage(message, kind = "") {
+  definitionDisplay.textContent = message;
+  definitionDisplay.className = kind ? `definition ${kind}` : "definition";
 }
 
-async function fetchJsonWithTimeout(url, timeoutMs = LOOKUP_TIMEOUT_MS) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const response = await fetch(url, { signal: controller.signal });
-    return response;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-function extractFreeDictionaryApiDefinitionText(apiData) {
-  if (!Array.isArray(apiData.entries) || apiData.entries.length === 0) return null;
-
-  const definitions = [];
-
-  for (const entry of apiData.entries) {
-    if (typeof entry.partOfSpeech !== "string") continue;
-    definitions.push(entry.partOfSpeech);
-
-    if (!Array.isArray(entry.senses)) continue;
-    let i = 0;
-    for (const sense of entry.senses) {
-      if (typeof sense.definition !== "string") continue;
-      i += 1;
-
-      const formatted = `    ${i}. ${sense.definition}`;
-      definitions.push(formatted);
-
-      if (!Array.isArray(sense.subsenses)) continue;
-      let j = 0;
-      for (const subsense of sense.subsenses) {
-        if (typeof subsense.definition !== "string") continue;
-        j += 1;
-
-        const formatted = `        ${i}.${j} ${subsense.definition}`;
-        definitions.push(formatted)
-      }
-    }
-  }
-
-  if (definitions.length === 0) return null;
-
-  return definitions.join("\n");
-}
-
-function extractDatamuseDefinitionText(apiData, requestedWord) {
-  if (!Array.isArray(apiData) || apiData.length === 0) return null;
-
-  const firstEntry = apiData[0];
-  if (!firstEntry || typeof firstEntry.word !== "string") return null;
-
-  const firstWord = firstEntry.word.toLowerCase();
-  const targetWord = requestedWord.toLowerCase();
-  if (firstWord !== targetWord) return null;
-
-  const definitions = [];
-
-  if (!Array.isArray(firstEntry.defs) || firstEntry.defs.length === 0) return null;
-
-  for (const rawDef of firstEntry.defs) {
-    if (typeof rawDef !== "string") continue;
-
-    const parts = rawDef.split("\t");
-    const partOfSpeech = parts.length > 1 ? parts[0].trim() : "";
-    const definitionBody = (parts.length > 1 ? parts[1] : parts[0]).trim();
-    if (!definitionBody) continue;
-
-    const formatted = partOfSpeech ? `(${partOfSpeech}) ${definitionBody}` : definitionBody;
-    definitions.push(formatted);
-  }
-
-  if (definitions.length === 0) return null;
-
-  const uniqueDefinitions = [...new Set(definitions)];
-  return uniqueDefinitions.map((definition, index) => `${index + 1}. ${definition}`).join("\n");
-}
-
-async function fetchDefinitionFromFreeDictionaryApi(word) {
-  const url = `https://freedictionaryapi.com/api/v1/entries/en/${encodeURIComponent(word)}`
-  const response = await fetchJsonWithTimeout(url);
-
-  if (!response.ok) {
-    throw new Error(`FreeDictionaryAPI HTTP ${response.status}`);
-  }
-
-  const data = await response.json();
-  const definition = extractFreeDictionaryApiDefinitionText(data);
-  if (!definition) {
-    throw new Error("Free Dictionary API had no definition for this word");
-  }
-
-  return definition;
-}
-
-async function fetchDefinitionFromDatamuse(word) {
-  const url = `https://api.datamuse.com/words?sp=${encodeURIComponent(word)}&md=d&max=5`;
-  const response = await fetchJsonWithTimeout(url);
-
-  if (!response.ok) {
-    throw new Error(`Datamuse HTTP ${response.status}`);
-  }
-
-  const data = await response.json();
-  const definition = extractDatamuseDefinitionText(data, word);
-  if (!definition) {
-    throw new Error("Datamuse had no definition for this word");
-  }
-
-  return definition;
-}
-
-async function lookupDefinition(word) {
-  const cacheKey = word.toLowerCase();
-  if (definitionCache.has(cacheKey)) {
-    return definitionCache.get(cacheKey);
-  }
-
-  const sources = [
-    { name: "FreeDictionaryAPI", lookup: fetchDefinitionFromFreeDictionaryApi },
-    { name: "Datamuse", lookup: fetchDefinitionFromDatamuse },
-  ];
-  const failures = [];
-
-  for (const source of sources) {
-    for (let attempt = 1; attempt <= LOOKUP_TIMEOUT_ATTEMPTS; attempt += 1) {
-      try {
-        const definition = await source.lookup(word);
-        const result = { source: source.name, definition };
-        definitionCache.set(cacheKey, result);
-        return result;
-      } catch (error) {
-        const isTimeout = error?.name === "AbortError";
-        const reason = isTimeout ? "request timed out" : (error?.message || "unknown error");
-        failures.push(`${source.name}: ${reason}`);
-
-        if (!isTimeout) break;
-        if (attempt < LOOKUP_TIMEOUT_ATTEMPTS) {
-          await delay(750 * attempt);
-        }
-      }
-    }
-  }
-
-  throw new Error(`Definition lookup failed. ${failures.join(" | ")}`);
+function flashInputError() {
+  wordInput.classList.remove("input-error-flash");
+  void wordInput.offsetWidth;
+  wordInput.classList.add("input-error-flash");
 }
 
 async function definePreviousWord() {
