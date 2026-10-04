@@ -36,20 +36,20 @@ def look_up_with_freedictionaryapi(word):
     )
 
     response.raise_for_status()
-    pretty_print_json(response.json())
+    # pretty_print_json(response.json())
     print("Free Dictionary API:", word)
     for entry in response.json().get("entries"):
         print(f"{entry.get("partOfSpeech")}:")
         for i, definition in enumerate(entry.get("senses")):
-            print(f"    {i+1}: {definition.get("definition")}")
+            print(f"    {i+1}: {definition.get("definition")} (", ", ".join(definition.get("tags")), ")", sep="")
         
 def pretty_print_json(data):
     import json
     print(json.dumps(data, indent=4, ensure_ascii=False))
 
 def look_up_word(word):
-    look_up_with_datamuse(word)
-    print()
+    # look_up_with_datamuse(word)
+    # print()
     look_up_with_freedictionaryapi(word)
 
 if __name__ == "__main__":
